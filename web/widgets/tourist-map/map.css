@@ -1,0 +1,9 @@
+.tourist-objects-map-container {
+    height: 830px;
+    width: 100%;
+}
+
+.tourist-objects-map-canvas {
+    height: 100%;
+    width: 100%;
+}

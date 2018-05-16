@@ -1,0 +1,12 @@
+RewriteEngine on
+RewriteBase /
+
+DirectoryIndex index.html index.htm index.php
+RewriteCond %{HTTP_HOST} www.(.*)
+RewriteRule ^(.*)$ http://%1/$1 [R=301,L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule . index.php
+
+AddDefaultCharset utf-8
