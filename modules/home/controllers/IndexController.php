@@ -44,11 +44,12 @@ class IndexController extends Controller
     {
         $place = Places::find()->one();
 
-        return $this->render('index', ['zoom' => 14,
-                                       'center' => [
-                                           'lat' => $place ? $place->locationModel->getLatitude() : 0,
-                                           'lng' => $place ? $place->locationModel->getLongitude() : 0
-                                       ]
+        return $this->render('index', [
+            'zoom' => 14,
+            'center' => [
+                'lat' => $place ? $place->locationModel->getLatitude() : 0,
+                'lng' => $place ? $place->locationModel->getLongitude() : 0
+            ]
         ]);
     }
 

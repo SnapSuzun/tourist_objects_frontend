@@ -8,6 +8,7 @@
  */
 
 \dosamigos\gallery\GalleryAsset::register($this);
+\app\modules\home\assets\HomeIndexAsset::register($this);
 ?>
 
 <?=\app\widgets\touristmap\TouristObjectsMap::widget([
