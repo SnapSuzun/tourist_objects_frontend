@@ -6,18 +6,6 @@ namespace app\modules\home\controllers;
 use app\components\filters\AjaxFilter;
 use app\modules\touristobject\models\Images;
 use app\modules\touristobject\models\Places;
-use dosamigos\google\maps\LatLng;
-use dosamigos\google\maps\layers\BicyclingLayer;
-use dosamigos\google\maps\Map;
-use dosamigos\google\maps\overlays\InfoWindow;
-use dosamigos\google\maps\overlays\Marker;
-use dosamigos\google\maps\overlays\Polygon;
-use dosamigos\google\maps\overlays\PolylineOptions;
-use dosamigos\google\maps\services\DirectionsRenderer;
-use dosamigos\google\maps\services\DirectionsRequest;
-use dosamigos\google\maps\services\DirectionsService;
-use dosamigos\google\maps\services\DirectionsWayPoint;
-use dosamigos\google\maps\services\TravelMode;
 use yii\helpers\Url;
 use yii\web\Controller;
 
@@ -60,6 +48,14 @@ class IndexController extends Controller
         $pointA = $post['points']['a'];
         $pointB = $post['points']['b'];
 
+        $lngDiff = $pointB['lng'] - $pointA['lng'];
+        $latDiff = $pointB['lat'] - $pointA['lat'];
+        $outBoundRate = 1;
+        $pointA['lng'] = min(max($pointA['lng'] - $lngDiff * $outBoundRate, -180), 180);
+        $pointA['lat'] -= min(max($pointA['lat'] - $latDiff * $outBoundRate, -90), 90);
+        $pointB['lng'] = max(min($pointB['lng'] + $lngDiff * $outBoundRate, 180), -180);
+        $pointB['lat'] = max(min($pointB['lat'] + $latDiff * $outBoundRate, 90), -90);
+
         $query = Places::find()->where([
             'location' => [
                 '$geoWithin' => [
@@ -83,10 +79,10 @@ class IndexController extends Controller
             'status' => 'success',
             'places' => []
         ];
-        foreach ($query->batch() as $places) {
+        foreach ($query->batch(500) as $places) {
             /** @var Places $place */
             foreach ($places as $place) {
-                if ($place->isTpoPlace()) {
+                if ($place->isTpoPlace() || \Yii::$app->request->get('show_all_places')) {
                     $response['places'][(string)$place->_id] = [
                         'coordinates' => [
                             'lat' => $place->locationModel->getLatitude(),
@@ -95,7 +91,7 @@ class IndexController extends Controller
                         'name' => $place->name,
                         'category' => $place->category,
                         'id' => (string)$place->_id,
-                        'information_url' => Url::toRoute(['place-info', 'id' => (string)$place->_id])
+                        'information_url' => Url::toRoute(array_merge(\Yii::$app->request->queryParams, ['place-info', 'id' => (string)$place->_id]))
                     ];
                 }
             }
@@ -115,7 +111,11 @@ class IndexController extends Controller
         $imageItems = [];
 
         /** @var Images[] $images */
-        $images = $place->getTpoImages()->limit(100)->all();
+        $query = $place->getTpoImages();
+        if(\Yii::$app->request->get('show_all_places')) {
+            $query = $place->getImages();
+        }
+        $images = $query->limit(100)->all();
         foreach ($images as $image) {
             $imageItems[] = [
                 'url' => $image->image_url,

@@ -18,7 +18,8 @@ class TouristObjectsMapAsset extends AssetBundle
     ];
 
     public $js = [
-        'map.js'
+        'map.js',
+        'markercluster.js'
     ];
 
     public $depends = [

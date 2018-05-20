@@ -33,6 +33,9 @@ class TouristObjectsMap extends Widget
 
     public $placeInfoUrl = '';
 
+    public $minZoom = null;
+    public $maxZoom = null;
+
     /**
      * @throws InvalidConfigException
      */
@@ -56,7 +59,9 @@ class TouristObjectsMap extends Widget
             'centerLatitude' => $this->centerLatitude,
             'zoom' => $this->zoom,
             'placesUrl' => $this->placesUrl,
-            'placeInfoUrl' => $this->placeInfoUrl
+            'placeInfoUrl' => $this->placeInfoUrl,
+            'minZoom' => $this->minZoom,
+            'maxZoom' => $this->maxZoom,
         ]);
     }
 }

@@ -1,6 +1,23 @@
+.wrap {
+    margin-bottom: -40px !important;
+    padding-bottom: 40px !important;
+}
+
 .wrap > .container {
     position: absolute;
     height: 100%;
-    padding: 51px 0 !important;
+    padding: 51px 0 40px!important;
     width: 100%;
+}
+
+.footer {
+    height: 40px !important;
+    padding-top: 0 !important;
+}
+.footer > .container {
+    margin-top: 10px;
+}
+
+.footer > .container > p {
+    margin: 0 0 0;
 }

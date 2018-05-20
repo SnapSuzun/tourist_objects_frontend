@@ -27,7 +27,7 @@ class Places extends ActiveRecord
      * Процент изображений с ТПО, ниже которого объект не считается туристическим
      * @var int
      */
-    public $tpoPlaceBorderPercent = 20;
+    public $tpoPlaceBorderPercent = 15;
 
     /**
      * @return string the name of the index associated with this ActiveRecord class.
@@ -85,6 +85,6 @@ class Places extends ActiveRecord
         }
         $tpoImagesCount = $this->getTpoImages()->count();
 
-        return ($tpoImagesCount / $allImagesCount) * 100 > $this->tpoPlaceBorderPercent;
+        return ($tpoImagesCount / $allImagesCount) * 100 >= $this->tpoPlaceBorderPercent;
     }
 }

@@ -1,18 +1,35 @@
+// https://github.com/googlemaps/js-marker-clusterer
 $(function () {
     TouristObjectsMap.initMap();
 });
 
 var TouristObjectsMap = {
     map: null,
+    searchBox: null,
+    markerCluster: null,
     markers: {},
     infoWindow: null,
     initMap: function () {
-        var mapCanvas = $('.tourist-objects-map-canvas');
+        var mapContainer = $('.tourist-objects-map-container');
+        var mapCanvas = mapContainer.find('.tourist-objects-map-canvas');
         const lat = mapCanvas.data('defaultLatitude'), long = mapCanvas.data('defaultLongitude'),
-            zoom = mapCanvas.data('defaultZoom');
+            zoom = mapCanvas.data('defaultZoom'), maxZoom = mapCanvas.data('maxZoom'), minZoom = mapCanvas.data('minZoom');
         TouristObjectsMap.map = new google.maps.Map(mapCanvas.get(0), {
             center: {lat: lat, lng: long},
-            zoom: zoom
+            zoom: zoom,
+            minZoom: minZoom,
+            maxZoom: maxZoom,
+            mapTypeControlOptions: {
+                style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
+            }
+        });
+
+        var input = mapContainer.find('.tourist-objects-map-search');
+        input.show();
+        TouristObjectsMap.searchBox = new google.maps.places.SearchBox(input.get(0));
+        TouristObjectsMap.map.controls[google.maps.ControlPosition.TOP_CENTER].push(input.get(0));
+        TouristObjectsMap.map.addListener('bounds_changed', function() {
+            TouristObjectsMap.searchBox.setBounds(TouristObjectsMap.map.getBounds());
         });
 
         TouristObjectsMap.getCurrentLocation(function (position) {
@@ -25,7 +42,29 @@ var TouristObjectsMap = {
     addEventListeners: function () {
         TouristObjectsMap.map.addListener('idle', function (e) {
             TouristObjectsMap.getPlaces(TouristObjectsMap.map.getBounds());
-        })
+        });
+
+        TouristObjectsMap.searchBox.addListener('places_changed', function() {
+            var places = TouristObjectsMap.searchBox.getPlaces();
+
+            if (places.length == 0) {
+                return;
+            }
+
+            var bounds = new google.maps.LatLngBounds();
+            places.forEach(function(place) {
+                if (!place.geometry) {
+                    console.log("Returned place contains no geometry");
+                    return;
+                }
+                if (place.geometry.viewport) {
+                    bounds.union(place.geometry.viewport);
+                } else {
+                    bounds.extend(place.geometry.location);
+                }
+            });
+            TouristObjectsMap.map.fitBounds(bounds);
+        });
     },
     getCurrentLocation: function (callback) {
         if (navigator.geolocation) {
@@ -60,7 +99,11 @@ var TouristObjectsMap = {
         })
     },
     setMarkersForPlaces: function (places) {
-        if (Object.keys(places).length) {
+        if (places) {
+            if (TouristObjectsMap.markerCluster) {
+                TouristObjectsMap.markerCluster.clearMarkers();
+            }
+
             Object.keys(TouristObjectsMap.markers).forEach(function (key) {
                 if (!(key in places)) {
                     var marker = TouristObjectsMap.markers[key];
@@ -112,6 +155,10 @@ var TouristObjectsMap = {
                     });
                 }
             }
+            TouristObjectsMap.markerCluster = new MarkerClusterer(TouristObjectsMap.map, Object.values(TouristObjectsMap.markers), {
+                imagePath: 'media/tourist-map/cluster-images/m',
+                maxZoom: 18
+            });
         }
     }
 };
