@@ -1,13 +1,20 @@
 <?php
+
 return [
     'components' => [
         'assetManager' => [
             'bundles' => [
                 'dosamigos\google\maps\MapAsset' => [
                     'options' => [
-                        'key' => 'this_is_id_key'
+                        'key' => 'api_key_id'
                     ]
-                ]
+                ],
+                'app\assets\GoogleMapAsset' => [
+                    'options' => [
+                        'key' => 'api_key_id',
+                        'libraries' => 'places'
+                    ]
+                ],
             ]
         ],
     ]
