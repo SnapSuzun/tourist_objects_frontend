@@ -82,7 +82,7 @@ class IndexController extends Controller
         foreach ($query->batch(500) as $places) {
             /** @var Places $place */
             foreach ($places as $place) {
-                if ($place->isTpoPlace() || \Yii::$app->request->get('show_all_places')) {
+                if (\Yii::$app->request->get('show_all_places') || $place->isTpoPlace()) {
                     $response['places'][(string)$place->_id] = [
                         'coordinates' => [
                             'lat' => $place->locationModel->getLatitude(),
