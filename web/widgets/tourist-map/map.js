@@ -9,11 +9,14 @@ var TouristObjectsMap = {
     markerCluster: null,
     markers: {},
     infoWindow: null,
+    currentPositionSplitter: ',',
+    $ajax: null,
     initMap: function () {
         var mapContainer = $('.tourist-objects-map-container');
         var mapCanvas = mapContainer.find('.tourist-objects-map-canvas');
         const lat = mapCanvas.data('defaultLatitude'), long = mapCanvas.data('defaultLongitude'),
-            zoom = mapCanvas.data('defaultZoom'), maxZoom = mapCanvas.data('maxZoom'), minZoom = mapCanvas.data('minZoom');
+            zoom = mapCanvas.data('defaultZoom'), maxZoom = mapCanvas.data('maxZoom'),
+            minZoom = mapCanvas.data('minZoom');
         TouristObjectsMap.map = new google.maps.Map(mapCanvas.get(0), {
             center: {lat: lat, lng: long},
             zoom: zoom,
@@ -28,12 +31,12 @@ var TouristObjectsMap = {
         input.show();
         TouristObjectsMap.searchBox = new google.maps.places.SearchBox(input.get(0));
         TouristObjectsMap.map.controls[google.maps.ControlPosition.TOP_CENTER].push(input.get(0));
-        TouristObjectsMap.map.addListener('bounds_changed', function() {
+        TouristObjectsMap.map.addListener('bounds_changed', function () {
             TouristObjectsMap.searchBox.setBounds(TouristObjectsMap.map.getBounds());
         });
 
         TouristObjectsMap.getCurrentLocation(function (position) {
-            if (position) {
+            if (position && !TouristObjectsMap.map.getCenter().lat() && !TouristObjectsMap.map.getCenter().lng()) {
                 TouristObjectsMap.map.setCenter(position);
             }
             TouristObjectsMap.addEventListeners();
@@ -42,9 +45,10 @@ var TouristObjectsMap = {
     addEventListeners: function () {
         TouristObjectsMap.map.addListener('idle', function (e) {
             TouristObjectsMap.getPlaces(TouristObjectsMap.map.getBounds());
+            TouristObjectsMap.saveCurrentPositionToRouteString();
         });
 
-        TouristObjectsMap.searchBox.addListener('places_changed', function() {
+        TouristObjectsMap.searchBox.addListener('places_changed', function () {
             var places = TouristObjectsMap.searchBox.getPlaces();
 
             if (places.length == 0) {
@@ -52,7 +56,7 @@ var TouristObjectsMap = {
             }
 
             var bounds = new google.maps.LatLngBounds();
-            places.forEach(function(place) {
+            places.forEach(function (place) {
                 if (!place.geometry) {
                     console.log("Returned place contains no geometry");
                     return;
@@ -65,6 +69,31 @@ var TouristObjectsMap = {
             });
             TouristObjectsMap.map.fitBounds(bounds);
         });
+    },
+    saveCurrentPositionToRouteString: function () {
+        if (window.history.pushState) {
+            var pathPieces = window.location.pathname.split('/');
+            var newPathname = "";
+
+            for (var i = 0; i < pathPieces.length - 1; i++) {
+                newPathname += '/';
+                newPathname += pathPieces[i]
+            }
+
+            newPathname += '@' + TouristObjectsMap.convertCurrentPositionToString();
+            newPathname += window.location.search;
+            window.history.pushState(null, window.title, window.origin + newPathname)
+        }
+    },
+    convertCurrentPositionToString: function () {
+        const map = TouristObjectsMap.map;
+        var pieces = [
+            map.getCenter().lat(),
+            map.getCenter().lng(),
+            map.zoom
+        ];
+
+        return pieces.join(TouristObjectsMap.currentPositionSplitter);
     },
     getCurrentLocation: function (callback) {
         if (navigator.geolocation) {
@@ -80,13 +109,16 @@ var TouristObjectsMap = {
         }
     },
     getPlaces: function (bounds) {
+        if (TouristObjectsMap.$ajax) {
+            TouristObjectsMap.$ajax.abort();
+        }
         var data = {
             points: {
                 a: {lat: bounds.getSouthWest().lat(), lng: bounds.getSouthWest().lng()},
                 b: {lat: bounds.getNorthEast().lat(), lng: bounds.getNorthEast().lng()}
             }
         };
-        $.ajax({
+        TouristObjectsMap.$ajax = $.ajax({
             url: $('.tourist-objects-map-canvas').data('placesUrl'),
             type: 'POST',
             dataType: 'json',
@@ -132,23 +164,18 @@ var TouristObjectsMap = {
                             url: place['information_url'],
                             success: function (response) {
                                 TouristObjectsMap.infoWindow.setContent(response);
-                                // $('.tourist-object-information').html(response);
-                                // $('.tourist-object-information').find('#gallery_2').attr('id', 'gallery_3');
-                                // var selector = '#gallery_3 a';
-                                // var options = {};
-                                // $(document).off('click.gallery', selector).on('click.gallery', selector, function() {
-                                //     console.log(123);
-                                //     var links = $(this).parent().find('a.gallery-item');
-                                //     options.index = $(this)[0];
-                                //     console.log($(this)[0])
-                                //     console.log(links)
-                                //     blueimp.Gallery(links, options);
-                                //     return false;
-                                // });
-                                // // $('.gallery-item').on('click', function (e) {
-                                // //     e.preventDefault();
-                                // //     console.log(window.blueimp.Gallery);
-                                // // })
+                                var selector = '#gallery_2';
+                                $(document).off('click.gallery', selector).on('click.gallery', selector, function(event) {
+                                    console.log(123);
+                                    event = event || window.event;
+                                    var target = event.target || event.srcElement,
+                                        link = target.src ? target.parentNode : target,
+                                        options = {index: link, event: event},
+                                        links = this.getElementsByTagName('a');
+                                    console.log(links);
+                                    blueimp.Gallery(links, options);
+                                    return false;
+                                });
                             }
                         });
                         TouristObjectsMap.infoWindow.open(TouristObjectsMap.map, TouristObjectsMap.markers[place['id']]);

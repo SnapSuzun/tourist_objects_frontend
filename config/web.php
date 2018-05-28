@@ -55,6 +55,7 @@ $config = [
             'showScriptName' => false,
             'rules' => [
                 '' => 'home/index',
+                '@<currentPosition:[\d\w-,.]+>' => 'home/index',
                 '<module:[\w-]+>' => '<module>/index/index',
 
                 '<module:[\w-]+>/<folder:[\w-]+>/<controller:[\w-]+>/<action:[\w-]+>/<id:\d+>' => '<module>/<folder>/<controller>/<action>',

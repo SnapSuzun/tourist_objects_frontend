@@ -2,13 +2,15 @@
 
 /**
  * @var \yii\web\View $this
- * @var \dosamigos\google\maps\Map $map
  * @var array $center
  * @var integer $zoom
  */
 
-\dosamigos\gallery\GalleryAsset::register($this);
-\app\modules\home\assets\HomeIndexAsset::register($this);
+use app\modules\home\assets\GalleryAsset;
+use app\modules\home\assets\HomeIndexAsset;
+
+GalleryAsset::register($this);
+HomeIndexAsset::register($this);
 ?>
 
 <?=\app\widgets\touristmap\TouristObjectsMap::widget([
@@ -19,4 +21,14 @@
         'minZoom' => 6,
 ])?>
 
-<div class="tourist-object-information"></div>
+<div class="tourist-object-information">
+    <div id="blueimp-gallery" class="blueimp-gallery blueimp-gallery-controls">
+        <div class="slides"></div>
+        <h3 class="title"></h3>
+        <a class="prev">‹</a>
+        <a class="next">›</a>
+        <a class="close">×</a>
+        <a class="play-pause"></a>
+        <ol class="indicator"></ol>
+    </div>
+</div>

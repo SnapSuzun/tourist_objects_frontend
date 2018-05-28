@@ -4,6 +4,8 @@
  * @var \app\modules\touristobject\models\Places $place
  * @var array $imageItems
  */
+use yii\bootstrap\Html;
+
 ?>
 
 <div
@@ -15,9 +17,10 @@
 
 <div class="row">
     <div class="col-lg-12 text-center">
-        <?= dosamigos\gallery\Gallery::widget([
-            'items' => $imageItems,
-            'options' => ['id' => 'gallery_2'],
-        ]); ?>
+        <div id="gallery_2">
+            <?php foreach ($imageItems as $item): ?>
+                <?= Html::a(Html::img($item['url'] ?? $item['src'], $item['imageOptions'] ?? []), $item['src'] ?? $item['url'], $item['options'] ?? []) ?>
+            <?php endforeach; ?>
+        </div>
     </div>
 </div>

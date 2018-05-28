@@ -4,6 +4,7 @@ namespace app\modules\home\controllers;
 
 
 use app\components\filters\AjaxFilter;
+use app\modules\home\components\Map;
 use app\modules\touristobject\models\Images;
 use app\modules\touristobject\models\Places;
 use yii\helpers\Url;
@@ -28,16 +29,21 @@ class IndexController extends Controller
         ];
     }
 
-    public function actionIndex()
+    public function actionIndex(string $currentPosition = null)
     {
-        $place = Places::find()->one();
+        $zoom = 15;
+        $location = [
+            'lat' => 0,
+            'lng' => 0,
+        ];
+
+        if($currentPosition) {
+            list($location, $zoom) = Map::parseCurrentPositionFromString($currentPosition);
+        }
 
         return $this->render('index', [
-            'zoom' => 14,
-            'center' => [
-                'lat' => $place ? $place->locationModel->getLatitude() : 0,
-                'lng' => $place ? $place->locationModel->getLongitude() : 0
-            ]
+            'zoom' => $zoom,
+            'center' => $location
         ]);
     }
 
@@ -91,7 +97,10 @@ class IndexController extends Controller
                         'name' => $place->name,
                         'category' => $place->category,
                         'id' => (string)$place->_id,
-                        'information_url' => Url::toRoute(array_merge(\Yii::$app->request->queryParams, ['place-info', 'id' => (string)$place->_id]))
+                        'information_url' => Url::toRoute(array_merge(\Yii::$app->request->queryParams, [
+                            'place-info',
+                            'id' => (string)$place->_id
+                        ]))
                     ];
                 }
             }
@@ -112,20 +121,20 @@ class IndexController extends Controller
 
         /** @var Images[] $images */
         $query = $place->getTpoImages();
-        if(\Yii::$app->request->get('show_all_places')) {
+        if (\Yii::$app->request->get('show_all_places')) {
             $query = $place->getImages();
         }
         $images = $query->limit(100)->all();
         foreach ($images as $image) {
             $imageItems[] = [
-                'url' => $image->image_url,
-                'src' => $image->thumbnail_url,
+                'url' => $image->thumbnail_url,
+                'src' => $image->image_url,
                 'options' => ['title' => $place->name],
                 'imageOptions' => ['width' => 128, 'height' => 128]
             ];
         }
 
-        return $this->renderAjax('touristic-object-info', ['place' => $place, 'imageItems' => $imageItems]);
+        return $this->renderPartial('touristic-object-info', ['place' => $place, 'imageItems' => $imageItems]);
     }
 
     /**
