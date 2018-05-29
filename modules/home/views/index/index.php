@@ -11,6 +11,7 @@ use app\modules\home\assets\HomeIndexAsset;
 
 GalleryAsset::register($this);
 HomeIndexAsset::register($this);
+$this->title = Yii::t('app', 'Tourist objects');
 ?>
 
 <?=\app\widgets\touristmap\TouristObjectsMap::widget([
